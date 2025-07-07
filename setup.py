@@ -20,9 +20,8 @@ AUTHOR = 'Daniel Hillier'
 REQUIRES_PYTHON = '>=3.4'
 VERSION = None
 
-# What packages are required for this module to be executed?
 REQUIRED = [
-    'pycryptodomex',
+    'cryptography',
 ]
 
 # The rest you shouldn't have to touch too much :)

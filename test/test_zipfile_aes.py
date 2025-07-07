@@ -17,15 +17,7 @@ from pyzipper import zipfile_aes
 FIXEDTEST_SIZE = 1000
 
 
-try:
-    import Cryptodome
-except ImportError:
-    Cryptodome = None
 
-requires_pycrypto = unittest.skipUnless(Cryptodome, 'requires pycryptodomex')
-
-
-@requires_pycrypto
 class WZAESKnownFileTests(unittest.TestCase):
     """Test decryption against invariant files for behaviour.
 
@@ -214,7 +206,6 @@ class WZAESKnownFileTests(unittest.TestCase):
                 zipfp.read('test.txt', pwd=b'test')
 
 
-@requires_pycrypto
 class WZAESTests(unittest.TestCase):
 
     def tearDown(self):
@@ -484,7 +475,6 @@ class WZAESTests(unittest.TestCase):
                 fp.read()
 
 
-@requires_pycrypto
 @requires_lzma
 class WZAESLZMATests(unittest.TestCase):
 
@@ -644,7 +634,6 @@ class AbstractTestsWithRandomBinaryFiles:
             self.zip_random_open_test(f, self.compression)
 
 
-@requires_pycrypto
 class WZAESStoredTestsWithRandomBinaryFiles(AbstractTestsWithRandomBinaryFiles,
                                             unittest.TestCase):
     compression = zipfile.ZIP_STORED
@@ -652,7 +641,6 @@ class WZAESStoredTestsWithRandomBinaryFiles(AbstractTestsWithRandomBinaryFiles,
     pwd = b'this is a test password'
 
 
-@requires_pycrypto
 @requires_zlib
 class WZAESDeflateTestsWithRandomBinaryFiles(AbstractTestsWithRandomBinaryFiles,
                                              unittest.TestCase):
@@ -661,7 +649,6 @@ class WZAESDeflateTestsWithRandomBinaryFiles(AbstractTestsWithRandomBinaryFiles,
     pwd = b'this is a test password'
 
 
-@requires_pycrypto
 @requires_bz2
 class WZAESBzip2TestsWithRandomBinaryFiles(AbstractTestsWithRandomBinaryFiles,
                                            unittest.TestCase):
@@ -670,7 +657,6 @@ class WZAESBzip2TestsWithRandomBinaryFiles(AbstractTestsWithRandomBinaryFiles,
     pwd = b'this is a test password'
 
 
-@requires_pycrypto
 @requires_lzma
 class WZAESLzmaTestsWithRandomBinaryFiles(AbstractTestsWithRandomBinaryFiles,
                                           unittest.TestCase):
