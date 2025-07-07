@@ -174,6 +174,10 @@ class TestSupport(unittest.TestCase):
         # Run the test as an external script, because it uses fork.
         script_helper.assert_python_ok("-c", textwrap.dedent("""
             import os
+            import sys
+            # Make sure we don't load the `test` code from stdlib.
+            sys.path.insert(0, os.getcwd())
+            print(os.getcwd())
             from test import support
             with support.temp_cwd() as temp_path:
                 pid = os.fork()
@@ -192,7 +196,7 @@ class TestSupport(unittest.TestCase):
                     # directory.
                     if not os.path.isdir(temp_path):
                         raise AssertionError("Child removed temp_path.")
-        """))
+        """), __cwd=os.getcwd())
 
     # Tests for change_cwd()
 

@@ -1,6 +1,20 @@
 ---
 name: Tests
-on: [push, pull_request]
+on:
+  push:
+    branches: [master]
+  pull_request:
+
+# Start with explicit read-only permissions.
+permissions:
+  contents: read
+
+
+# Cancel pending jobs if a new commit was pushed for the same branch.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 
 jobs:
   tests:
@@ -38,5 +52,4 @@ jobs:
 
       - name: Run all tests for ${{ matrix.python-version }}
         run: |
-          PYVERSION=$(python -c "import sys; print(''.join([str(sys.version_info.major), str(sys.version_info.minor)]))")
           python -m pytest
