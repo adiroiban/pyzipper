@@ -12,6 +12,8 @@ if len(sys.argv) > 1:
             'test.test_zipfile_aes',
             'test.test_zipfile2'
         ])
+    else:
+        names.extend(sys.argv[1:])
 else:
     names.append('test.test_zipfile')
 
