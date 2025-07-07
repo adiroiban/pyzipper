@@ -2554,15 +2554,24 @@ def compat_strip_drive(path):
         return os.path.splitdrive(path)[1]
 
     # Simplify path handling by using only unix separators.
-    sane_path = path.replace('\\', '/').rstrip('/')
+    sane_path = path
 
     if sane_path.startswith('///'):
         # Windows Share path without server name.
         sane_path = '//server-ignored/' + sane_path[3:]
 
+    if sane_path.startswith('\\\\\\'):
+        # Windows Share path without server name.
+        sane_path = '\\\\server-ignored\\' + sane_path[3:]
+
+    #import pdb; pdb.set_trace()
     parts = sane_path.split('/')
     if len(parts) > 3 and parts[3] == '':
-        return '/'.join(parts[4:])
+        return '/' + '/'.join(parts[4:])
+
+    parts = sane_path.split('\\')
+    if len(parts) > 3 and parts[3] == '':
+        return '\\' + '\\'.join(parts[4:])
 
     return os.path.splitdrive(sane_path)[1]
 
