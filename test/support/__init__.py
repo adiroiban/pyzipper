@@ -1,4 +1,12 @@
-"""Supporting definitions for the Python regression tests."""
+"""
+Supporting definitions for the Python regression tests.
+
+Copied from a  very old stdblib.
+Code not supported on latest Python version was removed.
+
+The goal is to move pyzipper tests to pytest so that we will
+no longer need the code from here.
+"""
 
 if __name__ != 'test.support':
     raise ImportError('support must be imported from the test package')
@@ -6,7 +14,6 @@ if __name__ != 'test.support':
 import asyncio.events
 import collections.abc
 import contextlib
-import datetime
 import errno
 import faulthandler
 import fnmatch
@@ -16,7 +23,6 @@ import importlib
 import importlib.util
 import io
 import logging.handlers
-import nntplib
 import os
 import platform
 import re
@@ -296,7 +302,7 @@ def get_attribute(obj, name):
         return attribute
 
 verbose = 1              # Flag set to 0 by regrtest.py
-use_resources = None     # Flag set to [] by regrtest.py
+use_resources = []     # Flag set to [] by regrtest.py
 max_memuse = 0           # Disable bigmem tests (they will still be run with
                          # small sizes, to make sure they work.)
 real_max_memuse = 0
@@ -1492,10 +1498,6 @@ def transient_internet(resource_name, *, timeout=30.0, errnos=()):
         if timeout is not None:
             socket.setdefaulttimeout(timeout)
         yield
-    except nntplib.NNTPTemporaryError as err:
-        if verbose:
-            sys.stderr.write(denied.args[0] + "\n")
-        raise denied from err
     except OSError as err:
         # urllib can wrap original socket errors multiple times (!), we must
         # unwrap to get at the original error.
@@ -1522,7 +1524,6 @@ def transient_internet(resource_name, *, timeout=30.0, errnos=()):
 def captured_output(stream_name):
     """Return a context manager used by captured_stdout/stdin/stderr
     that temporarily replaces the sys stream *stream_name* with a StringIO."""
-    import io
     orig_stdout = getattr(sys, stream_name)
     setattr(sys, stream_name, io.StringIO())
     try:
@@ -2005,24 +2006,6 @@ def set_match_tests(patterns):
     _match_test_patterns = tuple(patterns)
     _match_test_func = func
 
-
-
-def run_unittest(*classes):
-    """Run tests from unittest.TestCase-derived classes."""
-    valid_types = (unittest.TestSuite, unittest.TestCase)
-    suite = unittest.TestSuite()
-    for cls in classes:
-        if isinstance(cls, str):
-            if cls in sys.modules:
-                suite.addTest(unittest.findTestCases(sys.modules[cls]))
-            else:
-                raise ValueError("str arguments must be keys in sys.modules")
-        elif isinstance(cls, valid_types):
-            suite.addTest(cls)
-        else:
-            suite.addTest(unittest.makeSuite(cls))
-    _filter_suite(suite, match_test)
-    _run_suite(suite)
 
 #=======================================================================
 # Check for the presence of docstrings.
