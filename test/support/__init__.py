@@ -1,4 +1,12 @@
-"""Supporting definitions for the Python regression tests."""
+"""
+Supporting definitions for the Python regression tests.
+
+Copied from a  very old stdblib.
+Code not supported on latest Python version was removed.
+
+The goal is to move pyzipper tests to pytest so that we will
+no longer need the code from here.
+"""
 
 if __name__ != 'test.support':
     raise ImportError('support must be imported from the test package')
@@ -1998,24 +2006,6 @@ def set_match_tests(patterns):
     _match_test_patterns = tuple(patterns)
     _match_test_func = func
 
-
-
-def run_unittest(*classes):
-    """Run tests from unittest.TestCase-derived classes."""
-    valid_types = (unittest.TestSuite, unittest.TestCase)
-    suite = unittest.TestSuite()
-    for cls in classes:
-        if isinstance(cls, str):
-            if cls in sys.modules:
-                suite.addTest(unittest.findTestCases(sys.modules[cls]))
-            else:
-                raise ValueError("str arguments must be keys in sys.modules")
-        elif isinstance(cls, valid_types):
-            suite.addTest(cls)
-        else:
-            suite.addTest(unittest.makeSuite(cls))
-    _filter_suite(suite, match_test)
-    _run_suite(suite)
 
 #=======================================================================
 # Check for the presence of docstrings.
