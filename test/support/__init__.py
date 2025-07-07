@@ -6,7 +6,6 @@ if __name__ != 'test.support':
 import asyncio.events
 import collections.abc
 import contextlib
-import datetime
 import errno
 import faulthandler
 import fnmatch
@@ -295,7 +294,7 @@ def get_attribute(obj, name):
         return attribute
 
 verbose = 1              # Flag set to 0 by regrtest.py
-use_resources = None     # Flag set to [] by regrtest.py
+use_resources = []     # Flag set to [] by regrtest.py
 max_memuse = 0           # Disable bigmem tests (they will still be run with
                          # small sizes, to make sure they work.)
 real_max_memuse = 0
@@ -1517,7 +1516,6 @@ def transient_internet(resource_name, *, timeout=30.0, errnos=()):
 def captured_output(stream_name):
     """Return a context manager used by captured_stdout/stdin/stderr
     that temporarily replaces the sys stream *stream_name* with a StringIO."""
-    import io
     orig_stdout = getattr(sys, stream_name)
     setattr(sys, stream_name, io.StringIO())
     try:
