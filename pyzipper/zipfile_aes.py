@@ -64,9 +64,9 @@ class AESZipDecrypter(BaseZipDecrypter):
         if encpwdverify != pwd_verify:
             raise RuntimeError("Bad password for file %r" % zinfo.filename)
 
-        enckey = keymaterial[:key_length]
-        cipher = Cipher(algorithms.AES(enckey), modes.CTR(os.urandom(16)))
-        self.decrypter = cipher.decryptor()
+        self._enckey = keymaterial[:key_length]
+        self._counter = 0
+
         encmac_key = keymaterial[key_length:2 * key_length]
         self.hmac = hmac.HMAC(encmac_key, hashes.SHA1())
 
@@ -78,11 +78,30 @@ class AESZipDecrypter(BaseZipDecrypter):
 
     def decrypt(self, data):
         self.hmac.update(data)
-        return self.decrypter.update(data)
+        return b''.join(self._decrypt(self._getBlocks(data)))
 
     def check_hmac(self, hmac_check):
         if self.hmac.finalize()[:10] != hmac_check:
             raise BadZipFile("Bad HMAC check for file %r" % self.filename)
+
+    def _decrypt(self, blocks):
+        for block in blocks:
+            self._counter += 1
+            cipher = Cipher(
+                algorithms.AES(self._enckey),
+                modes.CTR((self._counter).to_bytes(16, byteorder='little')),
+                )
+            data = cipher.decryptor().update(block)
+            data += cipher.decryptor().finalize()
+            yield data
+
+    @staticmethod
+    def _getBlocks(original):
+        """
+        Return AES blocks.
+        """
+        for i in range(0, len(original), 16):
+            yield original[i:i+16]
 
 
 class BaseZipEncrypter:
@@ -156,11 +175,8 @@ class AESZipEncrypter(BaseZipEncrypter):
 
         self.encpwdverify = keymaterial[2*key_length:]
 
-        enckey = keymaterial[:key_length]
-        self.encrypter = Cipher(
-            algorithms.AES(enckey),
-            modes.CTR(os.urandom(16)),
-        ).encryptor()
+        self._enckey = keymaterial[:key_length]
+        self._counter = 0
         encmac_key = keymaterial[key_length:2*key_length]
         self.hmac = hmac.HMAC(encmac_key, hashes.SHA1())
 
@@ -174,12 +190,32 @@ class AESZipEncrypter(BaseZipEncrypter):
         return self.salt + self.encpwdverify
 
     def encrypt(self, data):
-        data = self.encrypter.update(data)
-        self.hmac.update(data)
-        return data
+        encrypted_data = b''.join(self._encrypt(self._getBlocks(data)))
+        self.hmac.update(encrypted_data)
+        return encrypted_data
 
     def flush(self):
         return struct.pack('<%ds' % self.hmac_size, self.hmac.finalize()[:10])
+
+    def _encrypt(self, blocks):
+        for block in blocks:
+            self._counter += 1
+            cipher = Cipher(
+                algorithms.AES(self._enckey),
+                modes.CTR((self._counter).to_bytes(16, byteorder='little')),
+                )
+            data = cipher.encryptor().update(block)
+            data += cipher.encryptor().finalize()
+            yield data
+
+    @staticmethod
+    def _getBlocks(original):
+        """
+        Return AES blocks.
+        """
+        for i in range(0, len(original), 16):
+            yield original[i:i+16]
+
 
 
 class AESZipInfo(ZipInfo):

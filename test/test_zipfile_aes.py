@@ -412,26 +412,36 @@ class WZAESTests(unittest.TestCase):
 
     def test_seek_tell(self):
         # Test seek functionality
-        txt = b"Where's Bruce?"
+        txt = b"Where's my greatest friend Bruce and all of his team?"
         bloc = txt.find(b"Bruce")
         pwd = b'passwd'
+
         # Check seek on a file
         with zipfile_aes.AESZipFile(TESTFN, "w") as zipf:
             zipf.pwd = pwd
             zipf.setencryption(zipfile_aes.WZ_AES, nbits=128)
             zipf.writestr("foo.txt", txt)
+
         with zipfile_aes.AESZipFile(TESTFN, "r") as zipf:
             zipf.pwd = pwd
             with zipf.open("foo.txt", "r") as fp:
+                # See to an arbitrary position.
                 fp.seek(bloc, os.SEEK_SET)
                 self.assertEqual(fp.tell(), bloc)
+
+                # Seek back with an arbitrary offset.
                 fp.seek(-bloc, os.SEEK_CUR)
                 self.assertEqual(fp.tell(), 0)
+
+                # Seek forward with an arbitrary offset.
                 fp.seek(bloc, os.SEEK_CUR)
                 self.assertEqual(fp.tell(), bloc)
+
                 self.assertEqual(fp.read(5), txt[bloc:bloc+5])
                 fp.seek(0, os.SEEK_END)
+
                 self.assertEqual(fp.tell(), len(txt))
+
                 fp.seek(0, os.SEEK_SET)
                 self.assertEqual(fp.tell(), 0)
 
@@ -441,13 +451,16 @@ class WZAESTests(unittest.TestCase):
             zipf.pwd = pwd
             zipf.setencryption(zipfile_aes.WZ_AES, nbits=128)
             zipf.writestr("foo.txt", txt)
+
         with zipfile_aes.AESZipFile(data, mode="r") as zipf:
             zipf.pwd = pwd
             with zipf.open("foo.txt", "r") as fp:
                 fp.seek(bloc, os.SEEK_SET)
                 self.assertEqual(fp.tell(), bloc)
+
                 fp.seek(-bloc, os.SEEK_CUR)
                 self.assertEqual(fp.tell(), 0)
+
                 fp.seek(bloc, os.SEEK_CUR)
                 self.assertEqual(fp.tell(), bloc)
                 self.assertEqual(fp.read(5), txt[bloc:bloc+5])
