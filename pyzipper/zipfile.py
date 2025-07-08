@@ -828,7 +828,7 @@ class ZipInfo (object):
         # Create ZipInfo instance to store file information
         if arcname is None:
             arcname = filename
-        arcname = os.path.normpath(os.path.splitdrive(arcname)[1])
+        arcname = os.path.normpath(compat_strip_drive(arcname))
         while arcname[0] in (os.sep, os.altsep):
             arcname = arcname[1:]
         if isdir:
@@ -2135,7 +2135,7 @@ class ZipFile:
             arcname = arcname.replace(os.path.altsep, os.path.sep)
         # interpret absolute pathname as relative, remove drive letter or
         # UNC path, redundant separators, "." and ".." components.
-        arcname = os.path.splitdrive(arcname)[1]
+        arcname = compat_strip_drive(arcname)
         invalid_path_parts = ('', os.path.curdir, os.path.pardir)
         arcname = os.path.sep.join(x for x in arcname.split(os.path.sep)
                                    if x not in invalid_path_parts)
@@ -2536,6 +2536,44 @@ class PyZipFile(ZipFile):
         if basename:
             archivename = "%s/%s" % (basename, archivename)
         return (fname, archivename)
+
+
+def compat_strip_drive(path):
+    """
+    Get os.path.splitdrive to behave the same in any Python version.
+
+    This can be removed once we no longer support Python 3.10.
+    """
+    if os.name != 'nt' or sys.version_info[:2] > (3,10):
+        return os.path.splitdrive(path)[1]
+
+    # We are on Windows and Python 3.10 or older.
+
+    if not (path.startswith('//') or path.startswith(r'\\')):
+        # Not a Windows Share path.
+        return os.path.splitdrive(path)[1]
+
+    # Simplify path handling by using only unix separators.
+    sane_path = path
+
+    if sane_path.startswith('///'):
+        # Windows Share path without server name.
+        sane_path = '//server-ignored/' + sane_path[3:]
+
+    if sane_path.startswith('\\\\\\'):
+        # Windows Share path without server name.
+        sane_path = '\\\\server-ignored\\' + sane_path[3:]
+
+    #import pdb; pdb.set_trace()
+    parts = sane_path.split('/')
+    if len(parts) > 3 and parts[3] == '':
+        return '/' + '/'.join(parts[4:])
+
+    parts = sane_path.split('\\')
+    if len(parts) > 3 and parts[3] == '':
+        return '\\' + '\\'.join(parts[4:])
+
+    return os.path.splitdrive(sane_path)[1]
 
 
 def main(args=None):

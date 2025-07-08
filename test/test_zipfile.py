@@ -1419,12 +1419,15 @@ class ExtractTests(unittest.TestCase):
             (r'C:/foo/bar', 'foo/bar'),
             (r'C://foo/bar', 'foo/bar'),
             (r'C:\foo\bar', 'foo/bar'),
-            (r'//conky/mountpoint/foo/bar', 'foo/bar'),
-            (r'\\conky\mountpoint\foo\bar', 'foo/bar'),
-            (r'///conky/mountpoint/foo/bar', 'conky/mountpoint/foo/bar'),
-            (r'\\\conky\mountpoint\foo\bar', 'conky/mountpoint/foo/bar'),
-            (r'//conky//mountpoint/foo/bar', 'conky/mountpoint/foo/bar'),
-            (r'\\conky\\mountpoint\foo\bar', 'conky/mountpoint/foo/bar'),
+            # The server together with the share name are considered as the drive root.
+            (r'//server-name/share-name/foo/bar', 'foo/bar'),
+            (r'\\server-name\share-name\foo\bar', 'foo/bar'),
+            # Here there is no server name.
+            (r'///share-name/root-without-server-name/foo/bar', 'root-without-server-name/foo/bar'),
+            (r'\\\share-name\root-without-server-name\foo\bar', 'root-without-server-name/foo/bar'),
+            # Here there is no share name.
+            (r'//server-name//root-dir-without-share-name/foo/bar', 'root-dir-without-share-name/foo/bar'),
+            (r'\\server-name\\root-dir-without-share-name\foo\bar', 'root-dir-without-share-name/foo/bar'),
             (r'//?/C:/foo/bar', 'foo/bar'),
             (r'\\?\C:\foo\bar', 'foo/bar'),
             (r'C:/../C:/foo/bar', 'C_/foo/bar'),
@@ -1459,7 +1462,7 @@ class ExtractTests(unittest.TestCase):
             with zipfile.ZipFile(TESTFN2, 'r') as zipfp:
                 writtenfile = zipfp.extract(arcname, targetpath)
                 self.assertEqual(writtenfile, correctfile,
-                                 msg='extract %r: %r != %r' %
+                                 msg='extract %r\nactual  : %r\nexpected: %r' %
                                  (arcname, writtenfile, correctfile))
             self.check_file(correctfile, content)
             rmtree('target')

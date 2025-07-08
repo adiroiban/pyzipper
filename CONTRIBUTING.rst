@@ -4,8 +4,8 @@
 Contributing
 ============
 
-Contributions are welcome, and they are greatly appreciated! Every little bit
-helps, and credit will always be given.
+Contributions are welcome, and they are greatly appreciated!
+Every little bit helps, and credit will always be given.
 
 You can contribute in many ways:
 
@@ -78,10 +78,12 @@ Ready to contribute? Here's how to set up `pyzipper` for local development.
    Now you can make your changes locally.
 
 5. When you're done making changes, check that your changes pass flake8 and the
-   tests, including testing other Python versions with tox::
+   tests.
+   You can run tests for other Python versions with tox.
+   When a PR is created, it will trigger GitHub Action tests for all the supported Python versions::
 
-
-    $ tox
+    $ pytest test
+    $ flake8
 
    To get flake8 and tox, just pip install them into your virtualenv.
 

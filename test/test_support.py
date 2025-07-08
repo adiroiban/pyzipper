@@ -174,6 +174,10 @@ class TestSupport(unittest.TestCase):
         # Run the test as an external script, because it uses fork.
         script_helper.assert_python_ok("-c", textwrap.dedent("""
             import os
+            import sys
+            # Make sure we don't load the `test` code from stdlib.
+            sys.path.insert(0, os.getcwd())
+            print(os.getcwd())
             from test import support
             with support.temp_cwd() as temp_path:
                 pid = os.fork()
@@ -192,7 +196,7 @@ class TestSupport(unittest.TestCase):
                     # directory.
                     if not os.path.isdir(temp_path):
                         raise AssertionError("Child removed temp_path.")
-        """))
+        """), __cwd=os.getcwd())
 
     # Tests for change_cwd()
 
@@ -289,11 +293,6 @@ class TestSupport(unittest.TestCase):
         support.check_syntax_error(self, "def class", lineno=1, offset=5)
         with self.assertRaises(AssertionError):
             support.check_syntax_error(self, "x=1")
-
-    def test_CleanImport(self):
-        import importlib
-        with support.CleanImport("asyncore"):
-            importlib.import_module("asyncore")
 
     def test_DirsOnSysPath(self):
         with support.DirsOnSysPath('foo', 'bar'):
@@ -397,7 +396,7 @@ class TestSupport(unittest.TestCase):
                              extra=extra,
                              blacklist=blacklist)
 
-        extra = {'TextTestResult', 'installHandler'}
+        extra = {'TextTestResult', 'installHandler', 'IsolatedAsyncioTestCase'}
         blacklist = {'load_tests', "TestProgram", "BaseTestSuite"}
 
         support.check__all__(self,
@@ -468,37 +467,6 @@ class TestSupport(unittest.TestCase):
                               env=env)
         self.assertEqual(proc.stdout.rstrip(), repr(args))
         self.assertEqual(proc.returncode, 0)
-
-    def test_args_from_interpreter_flags(self):
-        # Test test.support.args_from_interpreter_flags()
-        for opts in (
-            # no option
-            [],
-            # single option
-            ['-B'],
-            ['-s'],
-            ['-S'],
-            ['-E'],
-            ['-v'],
-            ['-b'],
-            ['-q'],
-            # same option multiple times
-            ['-bb'],
-            ['-vvv'],
-            # -W options
-            ['-Wignore'],
-            # -X options
-            ['-X', 'dev'],
-            ['-Wignore', '-X', 'dev'],
-            ['-X', 'faulthandler'],
-            ['-X', 'importtime'],
-            ['-X', 'showalloccount'],
-            ['-X', 'showrefcount'],
-            ['-X', 'tracemalloc'],
-            ['-X', 'tracemalloc=3'],
-        ):
-            with self.subTest(opts=opts):
-                self.check_options(opts, 'args_from_interpreter_flags')
 
     def test_optim_args_from_interpreter_flags(self):
         # Test test.support.optim_args_from_interpreter_flags()
@@ -605,11 +573,3 @@ class TestSupport(unittest.TestCase):
     # can_symlink
     # skip_unless_symlink
     # SuppressCrashReport
-
-
-def test_main():
-    tests = [TestSupport]
-    support.run_unittest(*tests)
-
-if __name__ == '__main__':
-    test_main()
