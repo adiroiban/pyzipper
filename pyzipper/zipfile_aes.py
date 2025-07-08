@@ -66,6 +66,7 @@ class AESZipDecrypter(BaseZipDecrypter):
 
         self._enckey = keymaterial[:key_length]
         self._counter = 0
+        self._block_buffer = b''
 
         encmac_key = keymaterial[key_length:2 * key_length]
         self.hmac = hmac.HMAC(encmac_key, hashes.SHA1())
@@ -77,7 +78,6 @@ class AESZipDecrypter(BaseZipDecrypter):
         return salt_length + 2
 
     def decrypt(self, data):
-        self.hmac.update(data)
         return b''.join(self._decrypt(self._getBlocks(data)))
 
     def check_hmac(self, hmac_check):
@@ -91,17 +91,22 @@ class AESZipDecrypter(BaseZipDecrypter):
                 algorithms.AES(self._enckey),
                 modes.CTR((self._counter).to_bytes(16, byteorder='little')),
                 )
+            self.hmac.update(block)
             data = cipher.decryptor().update(block)
             data += cipher.decryptor().finalize()
             yield data
 
-    @staticmethod
-    def _getBlocks(original):
+    def _getBlocks(self, original):
         """
         Return AES blocks.
         """
-        for i in range(0, len(original), 16):
-            yield original[i:i+16]
+        self._block_buffer += original
+        if len(self._block_buffer) < 16:
+            return
+
+        for i in range(0, len(self._block_buffer), 16):
+            yield self._block_buffer[i:i+16]
+        self._block_buffer = b''
 
 
 class BaseZipEncrypter:
