@@ -26,6 +26,9 @@ Installation
 Usage
 -----
 
+The main usage is via API.
+There is a small CLI helper available as `python -m pyzipper`
+
 .. code-block:: python
 
    import pyzipper

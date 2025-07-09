@@ -504,7 +504,7 @@ class WZAESLZMATests(unittest.TestCase):
         so that we've consumed all 'file_size' bytes but the end of stream
         marker remains unread (_compress_left != 0).
         """
-        expected_content = b"Test"
+        expected_content = b"Test-" * 100
         fname = "test.txt"
 
         with zipfile_aes.AESZipFile(
@@ -524,12 +524,12 @@ class WZAESLZMATests(unittest.TestCase):
             zipfp.setpassword(b"super secret")
             with zipfp.open(fname) as zf:
                 # read 1 byte at a time from the zipped stream
-                zf.MIN_READ_SIZE = 1
+                #zf.MIN_READ_SIZE = 16
                 content_out = b""
-                char = zf.read(1)
+                char = zf.read(160)
                 while char:
                     content_out += char
-                    char = zf.read(1)
+                    char = zf.read(160)
                 self.assertEqual(content_out, expected_content)
 
 

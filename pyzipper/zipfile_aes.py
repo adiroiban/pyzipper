@@ -66,7 +66,6 @@ class AESZipDecrypter(BaseZipDecrypter):
 
         self._enckey = keymaterial[:key_length]
         self._counter = 0
-        self._block_buffer = b''
 
         encmac_key = keymaterial[key_length:2 * key_length]
         self.hmac = hmac.HMAC(encmac_key, hashes.SHA1())
@@ -100,13 +99,8 @@ class AESZipDecrypter(BaseZipDecrypter):
         """
         Return AES blocks.
         """
-        self._block_buffer += original
-        if len(self._block_buffer) < 16:
-            return
-
-        for i in range(0, len(self._block_buffer), 16):
-            yield self._block_buffer[i:i+16]
-        self._block_buffer = b''
+        for i in range(0, len(original), 16):
+            yield original[i:i+16]
 
 
 class BaseZipEncrypter:
@@ -321,6 +315,9 @@ class AESZipInfo(ZipInfo):
 
 
 class AESZipExtFile(ZipExtFile):
+    # Read from compressed files in 4k blocks which are multiple
+    # of AES block size.
+    MIN_READ_SIZE = 4096
 
     def setup_aeszipdecrypter(self):
         if not self._pwd:
