@@ -1391,6 +1391,7 @@ class ZipExtFile(io.BufferedIOBase):
         return buf
 
     def _update_crc(self, newdata):
+        #import pdb; pdb.set_trace()
         # Update the CRC using the given data.
         if self._expected_crc is None:
             # No need to compute the CRC if we don't have a reference value
@@ -1403,7 +1404,8 @@ class ZipExtFile(io.BufferedIOBase):
             return
         # Check the CRC if we're at the end of the file
         if self._eof and self._running_crc != self._expected_crc:
-            raise BadZipFile("Bad CRC-32 for file %r" % self.name)
+            raise BadZipFile("Bad CRC-32 for file {}. Expected: {} Actual: {}".format(
+                self.name, self._expected_crc, self._running_crc))
 
     def check_integrity(self):
         self.check_crc()
@@ -1490,13 +1492,14 @@ class ZipExtFile(io.BufferedIOBase):
         n = max(n, self.MIN_READ_SIZE)
         n = min(n, self._compress_left)
 
-        data = self._fileobj.read(n)
-        self._compress_left -= len(data)
-        if not data:
+        encrypted_data = self._fileobj.read(n)
+        self._compress_left -= len(encrypted_data)
+        if not encrypted_data:
             raise EOFError
 
+        data = encrypted_data
         if self._decrypter is not None:
-            data = self._decrypter.decrypt(data)
+            data = self._decrypter.decrypt(encrypted_data)
         return data
 
     def close(self):
@@ -1545,7 +1548,7 @@ class ZipExtFile(io.BufferedIOBase):
 
         while read_offset > 0:
             read_len = min(self.MAX_SEEK_READ, read_offset)
-            self.read(read_len)
+            buff = self.read(read_len)
             read_offset -= read_len
 
         return self.tell()
